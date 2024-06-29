@@ -1,0 +1,185 @@
+---
+title: "S18389_miniproject"
+author: "Sunera"
+date: "2024-01-28"
+output: pdf_document
+---
+
+```{r}
+library(tidyverse)
+library(tinytex)
+library(ggplot2)
+library(janitor)
+library(magrittr)
+library(latex2exp)
+library(skimr)
+library(dplyr)
+library(viridisLite)
+```
+```{r}
+London_data=read_csv("../london_local_data_2022.csv")
+view(London_data)
+```
+
+```{r}
+London_sites=read.csv("../london_local_sites.csv")
+London_sites
+```
+
+```{r}
+glimpse(London_data)
+```
+
+```{r}
+#Cleaning the data set
+```
+
+```{r}
+London_data[is.na(London_data)]=0
+str(London_data)
+```
+
+```{r}
+London_air = London_data %>%
+  separate(date, into = c('year','time'), sep = 10) %>%
+  separate(year, into =c('year','month','date'),sep = '-')
+
+head(London_air)
+
+```
+
+
+```{r}
+London_air = London_air %>% mutate(Total_amount=nox+no2+no+pm10+o3+pm2_5+so2)
+London_air
+```
+
+
+```{r}
+view(London_air)
+```
+```{r}
+glimpse(London_air)
+```
+
+
+```{r}
+#Graph of Total Amount vs month
+graph_1 = London_air %>%
+  ggplot(mapping = aes(x=Total_amount))+
+  geom_boxplot(aes(col=month))+
+  xlab("nox amount") +
+  ggtitle("Graph of Total amount of air pollutants vs month ")
+graph_1
+```
+
+
+```{r}
+Table_0= London_air %>% group_by(month) %>% summarise(Total=sum(Total_amount))
+Table_0
+```
+```{r}
+Table_1= Table_0 %>% mutate(percentages=(Total/sum(Total))*100)
+Table_1
+```
+
+
+```{r}
+Table_1 = Table_1 %>% arrange(desc(month)) %>% mutate(prop= Total/sum(Total)*100,ypos=cumsum(prop)-0.5*prop)
+Table_1
+```
+
+
+```{r}
+Graph_2=ggplot(Table_1,aes(x="", y=prop, fill=month)) + geom_bar(stat="identity", width=1,color="black") + coord_polar("y", start=0)  + theme(legend.position="left") + geom_text(aes(y = ypos, label = paste(round(prop,2),"%")), size=3 ,color="black")  + theme_void() + scale_fill_brewer(palette="BrBG") + 
+  ggtitle("Pie Chart For Total amount of air pollutant for each month")
+Graph_2
+```
+
+
+```{r}
+Table_2= London_air %>% group_by(code) %>% summarise(Total=sum(Total_amount))
+Table_2= Table_2 %>% mutate(percentages=(Total/sum(Total))*100) %>% arrange(Total)
+Table_2
+```
+
+```{r}
+Graph_3=ggplot(Table_2,aes(x=code,y=Total)) + geom_bar(stat="identity",col="black",fill=rainbow(34)) + ggtitle("Total amount of air pollutants againts the side code") + xlab("Site code") + 
+  ylab("Total Amount") + theme(axis.text.x = element_text(angle = 90)) 
+Graph_3
+```
+
+
+
+```{r}
+table_3 <- London_air %>%
+group_by(month) %>%
+summarise(nox=mean(nox),no2=mean(no2)
+          ,no=mean(no),pm10=mean(pm10),o3=mean(o3),pm2_5=mean(pm2_5),so2=mean(so2))
+
+table_3
+```
+
+
+```{r}
+table_4 <- London_air %>%
+group_by(code) %>%
+summarise(nox=mean(nox),no2=mean(no2)
+          ,no=mean(no),pm10=mean(pm10),o3=mean(o3),pm2_5=mean(pm2_5),so2=mean(so2))
+
+table_4
+```
+
+```{r}
+London_air %>%  summarise(Total_no2=sum(no2),Total_no=sum(no),Total_nox=sum(nox),Total_pm10=sum(pm10),
+                         Total_o3=sum(o3),Total_pm2_5=sum(pm2_5),Total_so2=sum(so2))
+```
+```{r}
+Air_pollutant=c("nox","no","no2","pm10","o3","pm2_5","so2")
+Total=c(15212981,4683212,8029464,3259356,959034.6,177702.6,26079.7)
+df_air=data.frame(Air_pollutant,Total)
+df_air
+```
+
+```{r}
+Graph_4=ggplot(df_air,aes(x=Air_pollutant,y=Total)) + geom_bar(stat="identity",col="black",fill=heat.colors(7)) + ggtitle("Total amount of each air pollutant in London") + xlab("Air Pollutant") + 
+  ylab("Total Amount") 
+Graph_4
+```
+```{r}
+Table5=London_air %>% group_by(code) %>% summarise(nox_amount=sum(nox))
+Table5
+```
+
+
+
+```{r}
+Graph_5=ggplot(Table5,aes(x=code,y=nox_amount)) + geom_bar(stat="identity",col="black",fill=viridis(34)) + ggtitle("Total amount of nox againts the site code") + xlab("Site code") + 
+  ylab("Total Amount") + theme(axis.text.x = element_text(angle = 90)) 
+Graph_5
+```
+
+
+```{r}
+postscript(file ="Graph_4.eps",width =5 ,height = 6,horizontal = FALSE )
+Graph_4
+dev.off()
+```
+```{r}
+postscript(file ="Graph_3.eps",width =5 ,height = 6,horizontal = FALSE )
+Graph_3
+dev.off()
+```
+
+```{r}
+postscript(file ="Graph_2.eps",width =5 ,height = 6,horizontal = FALSE )
+Graph_2
+dev.off()
+
+
+
+
+
+
+`
+
